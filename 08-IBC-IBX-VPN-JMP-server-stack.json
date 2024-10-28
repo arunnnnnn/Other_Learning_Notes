@@ -1,0 +1,95 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "JumpInstanceType": {
+      "Type": "String",
+      "Description":"instance type for jump server",
+      "Default":"t2.large"
+    },
+    "keypairjmp": {
+      "Type": "String",
+      "Description": "enter the jmp keypair name",
+      "Default":"keyibccnsjmp01"
+    },
+    "jumpamiid": {
+      "Type": "String",
+      "Description": "AMI ID for JMP server",
+      "Default":"ami-0c644f818f60ae4f3"
+    },
+    "jumpsg": {
+      "Type": "String",
+      "Description": "Sg for JMP server",
+      "Default":"sg-0ca832bbaed8852fb"
+    },
+    "Environment": {
+      "Type": "String",
+      "Description": "what is the environment? DEV,SIT,UAT,PREPROD,PROD or DR?",
+      "Default":"cns"
+    },
+    "ProjectName": {
+      "Type": "String",
+      "Description": "Project Name",
+      "Default":"ibc"
+    },
+    "PublicSubnet1": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-1 CIDR Block",
+      "Default":"subnet-0eaad8d465694bf2c" 
+    },
+    "Kmskey": {
+      "Type": "String",
+      "Description": "Enter kms key to encrypt ebs volume",
+      "Default":"mrk-24cf1a09c957455984ea6ab6257fde9f" 
+    }
+  },
+  "Resources": {
+    "ibxvpnjump01": {
+      "Type": "AWS::EC2::Instance",      
+      "Properties": {
+        "ImageId": {
+          "Ref": "jumpamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "jumpsg"
+        }],
+        "InstanceType": {
+          "Ref": "JumpInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PublicSubnet1"
+        },
+        "KeyName": {
+          "Ref": "keypairjmp"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        }],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "ibxvpn-jmp-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

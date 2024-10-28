@@ -1,0 +1,113 @@
+
+we need to copy kafka cluster private endpoint from AWS console(b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094)
+
+Login to MSK Client and do below steps:
+....................................................
+
+-> sudo yum -y install java-11
+
+-> wget https://archive.apache.org/dist/kafka/2.8.1/kafka_2.13-2.8.1.tgz
+
+-> wget https://github.com/aws/aws-msk-iam-auth/releases/download/v1.1.1/aws-msk-iam-auth-1.1.1-all.jar
+
+-> tar -xzf kafka_2.13-2.8.1.tgz
+
+
+-> cd kafka_2.13-2.8.1/
+
+-> cd config/
+
+-> cp server.properties server.properties-backup (taking backup of current server.properties)
+
+-> vi server.properties
+
+server.properties
+......................
+
+# Broker 1 Configuration
+listeners=PLAINTEXT://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+advertised.listeners=PLAINTEXT://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+security.inter.broker.protocol=SSL
+ssl.client.auth=none
+ssl.endpoint.identification.algorithm=https
+
+# Broker 2 Configuration
+listeners=PLAINTEXT://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+advertised.listeners=PLAINTEXT://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+security.inter.broker.protocol=SSL
+ssl.client.auth=none
+ssl.endpoint.identification.algorithm=https
+
+-> save it 
+
+->  cd bin/
+
+-> vi client.properties
+
+Client.properties
+.................
+
+bootstrap.servers=b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+security.protocol=SSL
+ssl.endpoint.identification.algorithm=https
+
+
+server.properties
+......................
+
+# Broker 1 Configuration
+listeners=PLAINTEXT://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+advertised.listeners=PLAINTEXT://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-1.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+security.inter.broker.protocol=SSL
+ssl.client.auth=none
+ssl.endpoint.identification.algorithm=https
+
+# Broker 2 Configuration
+listeners=PLAINTEXT://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+advertised.listeners=PLAINTEXT://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094,SSL://b-2.kafkaibcuat2.rv2ho4.c18.kafka.us-east-1.amazonaws.com:9094
+security.inter.broker.protocol=SSL
+ssl.client.auth=none
+ssl.endpoint.identification.algorithm=https
+
+-> paste and save it.
+
+-> now create required topics
+
+Topic creation
+...................
+
+./kafka-topics.sh --create --bootstrap-server b-1.kafkaibcbcard.13vnqg.c4.kafka.us-east-1.amazonaws.com:9094 --command-config client.properties --replication-factor 2 --partitions 2 --topic ibc-iplus-provider-maeob-fetch-supplemental-data
+
+
+b-1.kafkaibcbcard.13vnqg.c4.kafka.us-east-1.amazonaws.com:9094,b-2.kafkaibcbcard.13vnqg.c4.kafka.us-east-1.amazonaws.com:9094
+
+b-1.kafkaibcpreprod.kf88qj.c9.kafka.us-east-1.amazonaws.com:9094,b-2.kafkaibcpreprod.kf88qj.c9.kafka.us-east-1.amazonaws.com:9094 - preprod
+
+b-2.kafkaibcprod.pm8hk5.c23.kafka.us-east-1.amazonaws.com:9094,b-1.kafkaibcprod.pm8hk5.c23.kafka.us-east-1.amazonaws.com:9094 - prod
+
+b-2.kafkaibcdev.khr0h0.c21.kafka.us-east-1.amazonaws.com:9094,b-1.kafkaibcdev.khr0h0.c21.kafka.us-east-1.amazonaws.com:9094 -dev 
+	
+
+•	ibc-iplus-provider-maeob-extraction
+•	ibc-iplus-provider-maeob-fetch-supplemental-data
+
+
+./kafka-topics.sh --list --zookeeper z-3.kafkaibcprod.pm8hk5.c23.kafka.us-east-1.amazonaws.com:2182
+
+z-3.kafkaibcprod.pm8hk5.c23.kafka.us-east-1.amazonaws.com:2182
+z-1.kafkaibcprod.pm8hk5.c23.kafka.us-east-1.amazonaws.com:2182
+z-2.kafkaibcprod.pm8hk5.c23.kafka.us-east-1.amazonaws.com:2182
+
+z-3.kafkaibcdev.khr0h0.c21.kafka.us-east-1.amazonaws.com:2181
+
+z-3.kafkaibctest.eswowi.c3.kafka.us-east-1.amazonaws.com:2181
+
+z-3.kafkaibcuat.7krgpz.c12.kafka.us-east-1.amazonaws.com:2181
+
+
+./kafka-console-producer.sh --broker-list b-1.kafkaibcprod.pm8hk5.c23.kafka.us-east-1.amazonaws.com:9094 --producer.config client.properties --topic ibc-iplus-provider-eob-extraction-prod   : command to publish message to kafka topic. note : need to use b1 and run from bin.
+
+
+
+
+

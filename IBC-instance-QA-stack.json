@@ -1,0 +1,453 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "ec2Keypair": {
+      "Type": "String",
+      "Description": "enter the keypair name",
+      "Default": "key-ibc-cns-qa-01"
+    },
+   "Kmskey": {
+      "Type": "String",
+      "Description": "enter the kmskey",
+      "Default": "966472d3-ca3d-41e4-b61a-2941fe8a5459"
+    },
+    "AutomationInstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "t3.2xlarge"
+    },
+    "AutomationRHELInstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "t3.xlarge"
+    },
+    "PerformanceInstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "t3.2xlarge"
+    },
+    "DBInstanceType": {
+      "Type": "String",
+      "Description": "Please choose a valid instance type.",
+      "Default": "m5.xlarge"
+    },
+    "clusteramiid": {
+      "Type": "String",
+      "Description": "Clusteramiid",
+      "Default": ""
+    },
+    "Windowsamiid": {
+      "Type": "String",
+      "Description": "AMI ID for qlick servers",
+      "Default": "ami-0fdf53f9711860f61"
+    },
+    "DBsg": {
+      "Type": "String",
+      "Description": "Sg for db servers",
+      "Default": "sg-0a4ec53a6ffea4535"
+    },
+    "AutomationSuite": {
+      "Type": "String",
+      "Description": "Sg for db servers",
+      "Default": "sg-0315f18a9866ec455"
+    },
+    "PerformanceTesting": {
+      "Type": "String",
+      "Description": "Sg for db servers",
+      "Default": "sg-03ad285d13927d17d"
+    },
+    "apiclustersgid": {
+      "Type": "String",
+      "Description": "API SecurityGroup id",
+      "Default": "sg-01c6be48e062d5450"
+    },
+    "Environment": {
+      "Type": "String",
+      "Description": "what is the environment? DEV,SIT,UAT,PREPROD,PROD or DR?",
+      "Default": "qa"
+    },
+    "ProjectName": {
+      "Type": "String",
+      "Description": "Project Name",
+      "Default": "ibc"
+    },
+    "PrivateSubnet2": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-1 CIDR Block",
+      "Default": "subnet-0a2ba2c57cab19ae5"
+    },
+    "PrivateSubnet1": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-2 CIDR Block",
+      "Default": "subnet-02ab3110bae161784"
+    }  
+  },
+  "Resources": {
+    "Automation01": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "AutomationSuite"
+        }],
+        "InstanceType": {
+          "Ref": "AutomationInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "100"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdb",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "250"
+            }
+          }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "automation-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "PerformanceTesting01": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "PerformanceTesting"
+        }],
+        "InstanceType": {
+          "Ref": "PerformanceInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "250"
+          }
+        }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "Performance-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "PerformanceTesting02": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "PerformanceTesting"
+        }],
+        "InstanceType": {
+          "Ref": "PerformanceInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "250"
+          }
+        }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "Performance-02"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "PerformanceTesting03": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "PerformanceTesting"
+        }],
+        "InstanceType": {
+          "Ref": "PerformanceInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet1"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "250"
+          }
+        }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "Performance-03"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "DBInstance01": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "DBsg"
+        }],
+        "InstanceType": {
+          "Ref": "DBInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "500"
+          }
+        }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "db-postgre-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "EC2Role": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "ec2.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess",
+          "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+          "arn:aws:iam::aws:policy/CloudWatchFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSESFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+          "arn:aws:iam::aws:policy/AmazonInspectorFullAccess",
+          "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+        ],
+        "RoleName": {
+          "Fn::Join": ["-", ["iam-ec2", {
+            "Ref": "ProjectName"
+          }, {
+            "Ref": "Environment"
+          }, "02"]]
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["iam-ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "02"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "EC2InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+
+      "Properties": {
+        "Path": "/",
+        "Roles": [{
+          "Ref": "EC2Role"
+        }]
+      }
+    }
+  }
+}

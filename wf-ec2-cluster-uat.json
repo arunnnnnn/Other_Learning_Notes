@@ -1,0 +1,317 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "ec2Keypair": {
+      "Type": "String",
+      "Description": "enter the keypair name",
+      "Default": "key-ibc-uat-app-01"
+    },
+    "Wflowclustername": {
+      "Type": "String",
+      "Description": "enter the API cluster name",
+      "Default": "ecs-ibc-uat-wflow-01"
+    },
+    "Kmskey": {
+      "Type": "String",
+      "Description": "enter the kmskey",
+      "Default": "98eecd3d-419d-4af1-a1a6-b152ad7497ad"
+    },
+    "WflowplusInstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "t3.large"
+    },
+    "clusteramiid": {
+      "Type": "String",
+      "Description": "Clusteramiid",
+      "Default": "ami-0175265545383a7fe"
+    },
+    "wflowpluseclustersgid": {
+      "Type": "String",
+      "Description": "wflowpluse SecurityGroup id",
+      "Default": "sg-059dc81b536262c51"
+    },
+    "Environment": {
+      "Type": "String",
+      "Description": "what is the environment? DEV,SIT,UAT,PREPROD,PROD or DR?",
+      "Default": "uat"
+    },
+    "ProjectName": {
+      "Type": "String",
+      "Description": "Project Name",
+      "Default": "ibc"
+    },
+    "PrivateSubnet2": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-2 CIDR Block",
+      "Default": "subnet-0a53a98e38bbdd118"
+    }
+  },
+  "Resources": {
+    "ContainerInstances05": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "wflowpluseclustersgid"
+        }],
+        "InstanceType": {
+          "Ref": "WflowplusInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "10"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdb",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "140"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdc",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "100"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "Wflowclustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "wflow-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "ContainerInstances06": {
+      "Type": "AWS::EC2::Instance",
+
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "wflowpluseclustersgid"
+        }],
+        "InstanceType": {
+          "Ref": "WflowplusInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "10"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdb",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "140"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdc",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "100"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "Wflowclustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "wflow-02"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "EC2Role": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "ec2.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess",
+          "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+          "arn:aws:iam::aws:policy/CloudWatchFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSESFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+          "arn:aws:iam::aws:policy/AmazonInspectorFullAccess",
+          "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+        ],
+        "RoleName": {
+          "Fn::Join": ["-", ["iam-ec2", {
+            "Ref": "ProjectName"
+          }, {
+            "Ref": "Environment"
+          }, "05"]]
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["iam-ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "05"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "EC2InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+
+      "Properties": {
+        "Path": "/",
+        "Roles": [{
+          "Ref": "EC2Role"
+        }]
+      }
+    }
+  }
+}

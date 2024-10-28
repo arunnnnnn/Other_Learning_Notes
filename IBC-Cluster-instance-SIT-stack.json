@@ -1,0 +1,1256 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "ec2Keypair": {
+      "Type": "String",
+      "Description": "enter the keypair name",
+      "Default": "key-ibc-sit-app-01"
+    },
+    "APIclustername": {
+      "Type": "String",
+      "Description": "enter the API cluster name",
+      "Default": "ecs-ibc-sit-api-01"
+    },
+    "BTclustername": {
+      "Type": "String",
+      "Description": "enter the API cluster name",
+      "Default": "ecs-ibc-sit-bt-01"
+    },
+    "Wflowclustername": {
+      "Type": "String",
+      "Description": "enter the API cluster name",
+      "Default": "ecs-ibc-sit-wflow-01"
+    },
+    "Pulse360clustername": {
+      "Type": "String",
+      "Description": "enter the API cluster name",
+      "Default": "ecs-ibc-sit-p360-01"
+    },
+    
+    "Kmskey": {
+      "Type": "String",
+      "Description": "enter the kmskey",
+      "Default": "f2b0fc08-1686-4696-bb17-15058c4319b2"
+    },
+    "APIInstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "c5.2xlarge"
+    },
+    "BTInstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "m5.2xlarge"
+    },
+    "WflowplusInstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "t3.large"
+    },
+    "Pulse360InstanceType": {
+      "Description": "EC2 instance type",
+      "Type": "String",
+      "ConstraintDescription": "Please choose a valid instance type.",
+      "Default": "c5.xlarge"
+    },
+    "QlikInstanceType": {
+      "Type": "String",
+      "Description": "Please choose a valid instance type.",
+      "Default": "c5.4xlarge"
+    },
+    "DBInstanceType": {
+      "Type": "String",
+      "Description": "Please choose a valid instance type.",
+      "Default": "r5.2xlarge"
+    },
+    "clusteramiid": {
+      "Type": "String",
+      "Description": "Clusteramiid",
+      "Default": "ami-0976e40d40fb67ee4"
+    },
+    "Windowsamiid": {
+      "Type": "String",
+      "Description": "AMI ID for qlick servers",
+      "Default": "ami-0c84f15344563bd0d"
+    },
+    "DBsg": {
+      "Type": "String",
+      "Description": "Sg for db servers",
+      "Default": "sg-025d63ffb85cc284b"
+    },
+    "QlikReplicasg": {
+      "Type": "String",
+      "Description": "Sg for qlikreplica servers",
+      "Default": "sg-0a385dd9442082354"
+    },
+    "QlikComposesg": {
+      "Type": "String",
+      "Description": "Sg for qlikcompose servers",
+      "Default": "sg-0ef3676cfa428ab81"
+    },
+    "apiclustersgid": {
+      "Type": "String",
+      "Description": "API SecurityGroup id",
+      "Default": "sg-0406e93961e8d8803"
+    },
+    "p360clustersgid": {
+      "Type": "String",
+      "Description": "pulse360 SecurityGroup id",
+      "Default": "sg-0841e0e0f8341ff01"
+    },
+    "btclustersgid": {
+      "Type": "String",
+      "Description": "BT SecurityGroup id",
+      "Default": "sg-0b67e78b7a527d271"
+    },
+    "Environment": {
+      "Type": "String",
+      "Description": "what is the environment? DEV,SIT,UAT,PREPROD,PROD or DR?",
+      "Default": "sit"
+    },
+    "ProjectName": {
+      "Type": "String",
+      "Description": "Project Name",
+      "Default": "ibc"
+    },
+    "PrivateSubnet1": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-1 CIDR Block",
+      "Default": "subnet-00c07835d8124e506"
+    },
+    "PrivateSubnet2": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-2 CIDR Block",
+      "Default": "subnet-065da59d003cfed67"
+    },
+    "PrivateSubnet3": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-1 CIDR Block",
+      "Default": "subnet-05b23757864bd98c8"
+    },
+    "PrivateSubnet4": {
+      "Type": "String",
+      "Description": "Enter Private Subnet-1 CIDR Block",
+      "Default": "subnet-0ed558e43c91ea6a4"
+    }
+  },
+  "Resources": {
+    "ContainerInstances01": {
+      "Type": "AWS::EC2::Instance",
+
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "apiclustersgid"
+        }],
+        "InstanceType": {
+          "Ref": "APIInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "10"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "240"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "APIclustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "api-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "ContainerInstances02": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "apiclustersgid"
+        }],
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "InstanceType": {
+          "Ref": "APIInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "10"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "240"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "APIclustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "api-02"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "ContainerInstances03": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "btclustersgid"
+        }],
+        "InstanceType": {
+          "Ref": "BTInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "10"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "240"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "BTclustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "bt-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "ContainerInstances04": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "btclustersgid"
+        }],
+        "InstanceType": {
+          "Ref": "BTInstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "10"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "240"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "BTclustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "bt-02"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "ContainerInstances05": {
+      "Type": "AWS::EC2::Instance",
+
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "p360clustersgid"
+        }],
+        "InstanceType": {
+          "Ref": "Pulse360InstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "10"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "240"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "Pulse360clustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "p360-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "ContainerInstances06": {
+      "Type": "AWS::EC2::Instance",
+
+      "Properties": {
+        "ImageId": {
+          "Ref": "clusteramiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "p360clustersgid"
+        }],
+        "InstanceType": {
+          "Ref": "Pulse360InstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "EC2InstanceProfile"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet2"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "10"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "240"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "yum -y update \n",
+                "yum -y install net-tools wget telnet yum-utils device-mapper-persistent-data lvm2 \n",
+                "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y \n",
+                "yum -y update && yum -y  install docker-ce \n",
+                "systemctl daemon-reload \n",
+                "systemctl start docker \n",
+                "systemctl enable docker \n",
+                "systemctl restart docker \n",
+                "curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.x86_64.rpm \n",
+                "yum localinstall -y amazon-ecs-init-latest.x86_64.rpm \n",
+                "echo ECS_CLUSTER=", {
+                  "Ref": "Pulse360clustername"
+                }, " >> /etc/ecs/ecs.config \n",
+                "systemctl enable ecs \n",
+                "systemctl start ecs \n",
+                "systemctl restart ecs \n"
+              ]
+            ]
+          }
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "p360-02"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "QlikReplicaInstances01": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "QlikReplicasg"
+        }],
+        "InstanceType": {
+          "Ref": "QlikInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet3"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "100"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdb",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "500"
+            }
+          }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "qlik-replica-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "QlikComposeInstances01": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "QlikComposesg"
+        }],
+        "InstanceType": {
+          "Ref": "QlikInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet3"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "100"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdb",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "500"
+            }
+          }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "qlik-compose-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "DBInstance01": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "DBsg"
+        }],
+        "InstanceType": {
+          "Ref": "DBInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet4"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "100"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdb",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "1024"
+            }
+          },
+          {
+            "DeviceName": "/dev/sdc",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "250"
+            }
+          },
+          {
+            "DeviceName": "/dev/sde",
+            "Ebs": {
+              "Encrypted": true,
+              "KmsKeyId": {
+                "Ref": "Kmskey"
+              },
+              "DeleteOnTermination": false,
+              "VolumeSize": "750"
+            }
+          }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "db-msql-01"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "DBInstance02": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "DBsg"
+        }],
+        "InstanceType": {
+          "Ref": "DBInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet4"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "500"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "150"
+          }
+        },
+        {
+          "DeviceName": "/dev/sde",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "350"
+          }
+        }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "db-msql-02"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "DBInstance03": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "DBsg"
+        }],
+        "InstanceType": {
+          "Ref": "DBInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet4"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "500"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "150"
+          }
+        },
+        {
+          "DeviceName": "/dev/sde",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "350"
+          }
+        }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "db-msql-03"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "DBInstance04": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {
+          "Ref": "Windowsamiid"
+        },
+        "SecurityGroupIds": [{
+          "Ref": "DBsg"
+        }],
+        "InstanceType": {
+          "Ref": "DBInstanceType"
+        },
+        "SubnetId": {
+          "Ref": "PrivateSubnet4"
+        },
+        "KeyName": {
+          "Ref": "ec2Keypair"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "100"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdb",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "500"
+          }
+        },
+        {
+          "DeviceName": "/dev/sdc",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "150"
+          }
+        },
+        {
+          "DeviceName": "/dev/sde",
+          "Ebs": {
+            "Encrypted": true,
+            "KmsKeyId": {
+              "Ref": "Kmskey"
+            },
+            "DeleteOnTermination": false,
+            "VolumeSize": "350"
+          }
+        }
+        ],
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "db-msql-04"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "EC2Role": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "ec2.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess",
+          "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+          "arn:aws:iam::aws:policy/CloudWatchFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSESFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+          "arn:aws:iam::aws:policy/AmazonInspectorFullAccess",
+          "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+        ],
+        "RoleName": {
+          "Fn::Join": ["-", ["iam-ec2", {
+            "Ref": "ProjectName"
+          }, {
+            "Ref": "Environment"
+          }, "04"]]
+        },
+        "Tags": [{
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": ["-", ["iam-ec2", {
+                "Ref": "ProjectName"
+              }, {
+                "Ref": "Environment"
+              }, "04"]]
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          }
+        ]
+      }
+    },
+    "EC2InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+
+      "Properties": {
+        "Path": "/",
+        "Roles": [{
+          "Ref": "EC2Role"
+        }]
+      }
+    }
+  }
+}

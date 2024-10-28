@@ -1,0 +1,12 @@
+Dear Hiring Manager,
+
+I am excited to apply for the DevOps Engineer role at Swisscom. As a DevOps Engineer with 4 years of experience, I am confident that my skills and expertise make me an ideal candidate for this position.
+
+In my previous role at UST Global, I gained valuable experience in implementing and managing CI/CD pipelines, infrastructure automation, and containerization using Docker and Kubernetes. Additionally, I am proficient in using tools such as Jenkins, Git, and Ansible to streamline development and deployment processes.
+
+I am drawn to Swisscom because of its reputation as a leading provider of digital solutions in Switzerland. I am impressed by the company's commitment to innovation and its emphasis on delivering excellent customer experiences. I am excited about the opportunity to contribute to such a dynamic and customer-focused organization.
+
+Thank you for considering my application. I look forward to discussing my qualifications in further detail.
+
+Sincerely,
+Arun.CS
